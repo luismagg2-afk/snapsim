@@ -1,5 +1,5 @@
 // SnapSim service worker: network-first for pages, cache-first for static assets.
-const CACHE = 'snapsim-v1';
+const CACHE = 'snapsim-v2';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

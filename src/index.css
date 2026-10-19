@@ -28,6 +28,16 @@ body {
   inset: 0;
 }
 
+/* see main.tsx: full screen height in the iOS home-screen app */
+html.ios-standalone,
+html.ios-standalone body {
+  height: var(--app-h, 100%);
+}
+html.ios-standalone #root {
+  bottom: auto;
+  height: var(--app-h, 100%);
+}
+
 /* The phone screen. Full-bleed on phones, a centred 393×852 iPhone canvas on desktop. */
 .screen {
   position: absolute;

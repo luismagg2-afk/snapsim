@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { startPersistence, useStore } from './store';
+import { isIOS, isStandalone } from './utils';
 // Snapchat's UI font is Avenir Next (built into iOS/macOS); Nunito Sans is the bundled look-alike
 // for Windows/Android so it never depends on a CDN.
 import '@fontsource/nunito-sans/400.css';
@@ -31,6 +32,18 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { error: Error | 
       </div>
     );
   }
+}
+
+// iOS home-screen apps with a translucent status bar report a layout height that is short by the
+// status bar (≈59pt), which leaves an empty strip under the tab bar. In that mode the app always
+// owns the whole screen, so size it to the screen instead.
+if (isIOS() && isStandalone()) {
+  const root = document.documentElement;
+  root.classList.add('ios-standalone');
+  const setHeight = () => root.style.setProperty('--app-h', `${Math.max(window.innerHeight, window.screen.height)}px`);
+  setHeight();
+  window.addEventListener('resize', setHeight);
+  window.addEventListener('orientationchange', setHeight);
 }
 
 startPersistence();
