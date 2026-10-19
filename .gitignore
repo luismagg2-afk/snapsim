@@ -1,0 +1,10 @@
+node_modules
+dist
+test-results
+playwright-report
+tsconfig.tsbuildinfo
+avatar-sheet.png
+
+# private reference screenshots (names, location) – only needed locally to re-crop images
+scripts/reference*
+scripts/ref-*

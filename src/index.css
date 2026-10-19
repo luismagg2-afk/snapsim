@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #121212;
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  font-family: 'Avenir Next', 'Avenir', 'Nunito Sans', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
+}
+
+#root {
+  position: fixed;
+  inset: 0;
+}
+
+/* The phone screen. Full-bleed on phones, a centred 393×852 iPhone canvas on desktop. */
+.screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: #fff;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (min-width: 600px) and (min-height: 700px) {
+  #root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050505;
+  }
+  .screen {
+    position: relative;
+    inset: auto;
+    width: 393px;
+    height: min(852px, 100vh);
+    box-shadow: 0 0 0 1px #2a2a2a, 0 30px 80px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Snapchat-Web view: always full window */
+.screen.web {
+  position: fixed !important;
+  inset: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  box-shadow: none !important;
+}
+
+/* Snapchat Web shrinks the sidebar on narrower windows (≈236px at 1000px wide) */
+.web-sidebar {
+  width: 341px;
+}
+@media (max-width: 1099px) {
+  .web-sidebar {
+    zoom: 0.692;
+  }
+}
+
+/* Inputs must be ≥16px so iOS Safari doesn't zoom on focus. */
+input,
+textarea,
+select {
+  font-size: 16px;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.press {
+  transition: transform 0.12s ease, opacity 0.12s ease, background-color 0.12s ease;
+}
+.press:active {
+  transform: scale(0.94);
+  opacity: 0.8;
+}
+.row-press {
+  transition: background-color 0.15s ease;
+}
+.row-press:active {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes typingDot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.anim-right { animation: slideInRight 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.anim-up { animation: slideUp 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.anim-fade { animation: fadeIn 0.2s ease; }
+.anim-pop { animation: popIn 0.18s ease; }
+
+/* While exporting, nothing animates so the capture is stable. */
+.exporting *,
+.exporting *::before,
+.exporting *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.sheet-input {
+  @apply w-full rounded-xl bg-[#2a2a2a] px-3 py-2.5 text-white outline-none placeholder:text-[#777];
+}
+.sheet-label {
+  @apply mb-1 mt-3 block text-[13px] font-medium text-[#9a9a9a];
+}
+.sheet-btn {
+  @apply press flex w-full items-center justify-center gap-2 rounded-xl bg-[#2a2a2a] px-4 py-3 text-[15px] font-semibold text-white;
+}
+
+/* Apple emoji images inline with text */
+.apple-emoji {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  margin: 0 0.03em;
+  vertical-align: -0.24em;
+  object-fit: contain;
+}
