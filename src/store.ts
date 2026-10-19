@@ -45,6 +45,8 @@ interface State {
   addContact: () => string;
   removeContact: (id: string) => void;
   moveContact: (from: number, to: number) => void;
+  /** Adds `delta` to every contact that shows a streak; returns how many changed. */
+  bumpAllStreaks: (delta: number) => number;
   resetContact: (id: string) => void;
   restoreDefaults: () => void;
 
@@ -222,6 +224,19 @@ export const useStore = create<State>((set, get) => {
         return { contacts: s.contacts.filter((c) => c.id !== id), messages, stories: s.stories.filter((x) => x.author !== id) };
       });
       remove(`msgs:${id}`);
+    },
+    bumpAllStreaks: (delta) => {
+      const now = Date.now();
+      let n = 0;
+      set((s) => ({
+        contacts: s.contacts.map((c) => {
+          if (!c.showStreak || c.streak <= 0) return c;
+          n++;
+          const streak = Math.max(0, c.streak + delta);
+          return { ...c, streak, showStreak: streak > 0, lastStreakBump: now };
+        }),
+      }));
+      return n;
     },
     moveContact: (from, to) =>
       set((s) => {
@@ -413,6 +428,7 @@ export function startPersistence() {
   };
   document.addEventListener('visibilitychange', () => document.hidden && flushNow());
   window.addEventListener('pagehide', flushNow);
+  window.addEventListener('beforeunload', flushNow);
 
   return useStore.subscribe((s) => {
     if (!s.ready) {
@@ -427,6 +443,6 @@ export function startPersistence() {
       for (const id of Object.keys(s.messages)) if (s.messages[id] !== prev.messages[id]) dirty.add(`msgs:${id}`);
     }
     prev = s;
-    if (dirty.size && !timer) timer = setTimeout(flush, 250);
+    if (dirty.size && !timer) timer = setTimeout(flush, 60);
   });
 }

@@ -249,3 +249,47 @@ test('web view: switch, open chat, Apple emoji and live clock', async ({ page })
   await expect(page.getByTestId('web-layout')).toBeVisible();
   expect(hhmm).toMatch(/^\d\d:\d\d$/);
 });
+
+test('raise all streaks at once', async ({ page }) => {
+  await openMenu(page);
+  await page.getByTestId('menu-contacts').click();
+  await page.getByTestId('bulk-streaks').getByRole('button', { name: '+2' }).click();
+  await page.getByTestId('bulk-custom').fill('10');
+  await page.getByRole('button', { name: 'Anwenden' }).click();
+  await page.getByRole('button', { name: 'Schließen' }).click();
+  await expect(rows(page).nth(0)).toContainText('70'); // 58 + 2 + 10
+  await expect(rows(page).nth(4)).toContainText('30'); // 18 + 2 + 10
+  await expect(rows(page).nth(9).locator('img[alt="🔥"]')).toHaveCount(0); // no streak stays without one
+  await page.waitForTimeout(500);
+  await page.reload();
+  await expect(rows(page).nth(0)).toContainText('70');
+});
+
+test('camera filters can be picked and are applied to the snap', async ({ page, browserName }) => {
+  await page.getByTestId('nav-camera').click();
+  const bw = page.getByRole('button', { name: 'Filter S/W' });
+  await bw.click();
+  await expect(bw).toHaveAttribute('aria-pressed', 'true');
+  if (browserName === 'chromium') {
+    await page.waitForFunction(() => (document.querySelector('video') as HTMLVideoElement)?.videoWidth > 0, null, { timeout: 15_000 });
+    await expect(page.locator('video')).toHaveCSS('filter', /grayscale/);
+    await page.getByTestId('shutter').click();
+  } else {
+    const chooser = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: 'Foto hochladen' }).click();
+    await (await chooser).setFiles(IMAGE);
+  }
+  await expect(page.getByTestId('snap-editor')).toBeVisible();
+  // the captured photo is black & white: sample its centre
+  const grey = await page.locator('[data-testid=snap-editor] img').first().evaluate(async (img: HTMLImageElement) => {
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    const [r, g, b] = ctx.getImageData(c.width >> 1, c.height >> 1, 1, 1).data;
+    return Math.max(Math.abs(r - g), Math.abs(g - b)) < 12;
+  });
+  expect(grey).toBe(true);
+});

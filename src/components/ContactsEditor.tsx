@@ -12,7 +12,13 @@ const ROW = 60;
 export default function ContactsEditor() {
   const contacts = useStore((s) => s.contacts);
   const editId = useStore((s) => s.editContactId);
-  const { setSheet, setEditContact, addContact, moveContact } = useStore.getState();
+  const { setSheet, setEditContact, addContact, moveContact, bumpAllStreaks, showToast } = useStore.getState();
+  const [custom, setCustom] = useState('');
+  const bump = (d: number) => {
+    if (!d) return;
+    const n = bumpAllStreaks(d);
+    showToast(n ? `Alle Flammen ${d > 0 ? '+' : ''}${d} (${n} Kontakte)` : 'Kein Kontakt hat Flammen');
+  };
   const [drag, setDrag] = useState<{ from: number; dy: number; startY: number } | null>(null);
 
   const close = () => {
@@ -26,6 +32,39 @@ export default function ContactsEditor() {
 
   return (
     <Sheet title="Kontakte bearbeiten" onClose={close} full>
+      <div className="mb-3 rounded-xl bg-[#262626] p-3" data-testid="bulk-streaks">
+        <div className="text-[15px] font-bold">
+          <Emo text="Alle Flammen auf einmal 🔥" />
+        </div>
+        <div className="mt-1 text-[12px] text-[#999]">Gilt für alle Kontakte, die gerade Flammen haben.</div>
+        <div className="mt-2 flex gap-2">
+          {[-1, 1, 2, 3].map((d) => (
+            <button key={d} className="press h-10 flex-1 rounded-xl bg-[#3a3a3a] text-[16px] font-bold" onClick={() => bump(d)}>
+              {d > 0 ? `+${d}` : d}
+            </button>
+          ))}
+        </div>
+        <div className="mt-2 flex gap-2">
+          <input
+            className="sheet-input h-10 py-0"
+            type="number"
+            inputMode="numeric"
+            placeholder="Eigene Zahl (z. B. 10)"
+            value={custom}
+            onChange={(e) => setCustom(e.target.value)}
+            data-testid="bulk-custom"
+          />
+          <button
+            className="press shrink-0 rounded-xl bg-[#FFFC00] px-4 text-[15px] font-bold text-black"
+            onClick={() => {
+              bump(parseInt(custom) || 0);
+              setCustom('');
+            }}
+          >
+            Anwenden
+          </button>
+        </div>
+      </div>
       <p className="pb-2 text-[12px] text-[#888]">Ziehen am Griff zum Sortieren · Tippen zum Bearbeiten. Angepinnte Kontakte stehen im Chat immer oben.</p>
       <div className="relative" style={{ height: contacts.length * ROW }} data-testid="editor-list">
         {contacts.map((c, i) => {

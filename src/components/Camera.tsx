@@ -24,6 +24,7 @@ import {
   ZapOff,
 } from 'lucide-react';
 import { AddFriendIcon } from './icons';
+import { applyFilter, cssFilter, FILTERS, type CamFilter } from '../filters';
 import { useStore } from '../store';
 import { compressImage, dataUrlToBlob, loadImage, pickFile, shareOrDownload, uid } from '../utils';
 import { Avatar } from './common';
@@ -58,6 +59,8 @@ function LiveCamera({ onPhoto, web, onClose }: { onPhoto: (img: string) => void;
   const [flash, setFlash] = useState(false);
   const [flashing, setFlashing] = useState(false);
   const [menu, setMenu] = useState(false);
+  const [filterIdx, setFilterIdx] = useState(0);
+  const filter = FILTERS[filterIdx];
   const myAvatar = useStore((s) => s.settings.myAvatar);
   const showPlaceholder = useStore((s) => s.showPlaceholder);
 
@@ -114,13 +117,15 @@ function LiveCamera({ onPhoto, web, onClose }: { onPhoto: (img: string) => void;
       ctx.scale(-1, 1);
     }
     ctx.drawImage(v, 0, 0);
+    if (facing === 'user') ctx.setTransform(1, 0, 0, 1, 0, 0);
+    applyFilter(c, filter);
     setFlashing(false);
     onPhoto(await compressImage(c.toDataURL('image/jpeg', 0.92)));
   };
 
   const upload = async () => {
     const f = await pickFile('image/*');
-    if (f) onPhoto(await compressImage(f));
+    if (f) onPhoto(await filteredImage(await compressImage(f), filter));
   };
 
   return (
@@ -136,7 +141,7 @@ function LiveCamera({ onPhoto, web, onClose }: { onPhoto: (img: string) => void;
         muted
         autoPlay
         className="absolute inset-0 h-full w-full object-cover"
-        style={{ transform: facing === 'user' ? 'scaleX(-1)' : undefined, opacity: state === 'live' ? 1 : 0 }}
+        style={{ transform: facing === 'user' ? 'scaleX(-1)' : undefined, opacity: state === 'live' ? 1 : 0, filter: cssFilter(filter) }}
       />
       {state !== 'live' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1b1b1b] px-8 text-center">
@@ -220,6 +225,8 @@ function LiveCamera({ onPhoto, web, onClose }: { onPhoto: (img: string) => void;
           onMemories={upload}
           myAvatar={myAvatar}
           placeholder={showPlaceholder}
+          filterIdx={filterIdx}
+          onFilter={setFilterIdx}
         />
       )}
       </div>
@@ -659,6 +666,18 @@ function SendTo({ image, onBack }: { image: string; onBack: () => void }) {
   );
 }
 
+/** Runs a filter over an image data URL (used for photos picked from the gallery). */
+async function filteredImage(dataUrl: string, f: CamFilter) {
+  if (!f.ops.length) return dataUrl;
+  const img = await loadImage(dataUrl);
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth;
+  c.height = img.naturalHeight;
+  c.getContext('2d')!.drawImage(img, 0, 0);
+  applyFilter(c, f);
+  return c.toDataURL('image/jpeg', 0.9);
+}
+
 const SHADOW = { filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.35))' };
 
 /** iOS-app camera chrome. Positions are measured from the reference screenshot (pt). */
@@ -671,6 +690,8 @@ function PhoneControls({
   onMemories,
   myAvatar,
   placeholder,
+  filterIdx,
+  onFilter,
 }: {
   live: boolean;
   flash: boolean;
@@ -680,11 +701,12 @@ function PhoneControls({
   onMemories: () => void;
   myAvatar: string;
   placeholder: (title: string, text: string) => void;
+  filterIdx: number;
+  onFilter: (i: number) => void;
 }) {
-  const contacts = useStore((s) => s.contacts);
   const { setSheet } = useStore.getState();
   const [tab, setTab] = useState('Für dich');
-  const lens = () => placeholder('Linsen', 'Linsen und Filter sind in dieser Simulation nicht enthalten.');
+  const lens = () => placeholder('Linsen', 'Gesichts-Linsen sind in dieser Simulation nicht enthalten. Farbfilter findest du rechts neben dem Auslöser.');
   const at = (x: number, y: number, size: number) => ({ left: x - size / 2, top: y - size / 2, width: size, height: size });
   const atB = (x: number, yFromBottom: number, size: number) => ({ left: x - size / 2, bottom: yFromBottom - size / 2, width: size, height: size });
   const icon = 'press absolute z-10 flex items-center justify-center';
@@ -738,14 +760,35 @@ function PhoneControls({
       </button>
       <button aria-label="Foto aufnehmen" data-testid="shutter" className="press absolute z-10 rounded-full border-[5px] border-white" style={atB(196.5, 97, 85)} onClick={onShutter} />
       {!live && <span className="sr-only">Kamera nicht aktiv – Auslöser öffnet den Upload</span>}
-      {[273.7, 335, 396].map((x, i) => {
-        const c = contacts[i + 1];
-        return (
-          <button key={x} aria-label="Linse" className="press absolute z-10 overflow-hidden rounded-full bg-[#333]" style={atB(x, 97, 49)} onClick={lens}>
-            {c?.avatar ? <img src={c.avatar} alt="" className="h-full w-full object-cover" draggable={false} /> : null}
+      {/* filter carousel right of the shutter (circles 49pt every 61.3pt, first centre at 273.7pt) */}
+      <div
+        className="scroll absolute z-10 flex items-center gap-[12.3px] overflow-x-auto"
+        style={{ left: 249.2, right: 0, bottom: 97 - 30, height: 60, paddingRight: 12 }}
+        data-testid="filters"
+      >
+        {FILTERS.map((f, i) => (
+          <button
+            key={f.id}
+            aria-label={`Filter ${f.name}`}
+            aria-pressed={i === filterIdx}
+            className="press relative h-[49px] w-[49px] shrink-0 overflow-hidden rounded-full bg-[#333]"
+            style={{ boxShadow: i === filterIdx ? '0 0 0 3px #fff' : '0 1px 3px rgba(0,0,0,.35)' }}
+            onClick={() => onFilter(i === filterIdx ? 0 : i)}
+          >
+            <img src={myAvatar} alt="" className="h-full w-full object-cover" style={{ filter: cssFilter(f) }} draggable={false} />
+            {f.id === 'none' && <span className="absolute inset-0 flex items-center justify-center bg-black/35 text-[10px] font-bold">Aus</span>}
           </button>
-        );
-      })}
+        ))}
+      </div>
+      {filterIdx > 0 && (
+        <div
+          key={filterIdx}
+          className="anim-pop pointer-events-none absolute z-10 rounded-full bg-black/35 px-3 py-[3px] text-[13px] font-semibold"
+          style={{ left: '50%', transform: 'translateX(-50%)', bottom: 97 + 42.5 + 62 }}
+        >
+          {FILTERS[filterIdx].name}
+        </div>
+      )}
 
       {/* lens categories */}
       <button aria-label="Spiele" className={icon} style={{ ...atB(27.7, 30, 34), ...SHADOW }} onClick={() => placeholder('Spiele', 'Spiele sind in dieser Simulation nicht enthalten.')}>
