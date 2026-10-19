@@ -138,6 +138,15 @@ select {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-3px); opacity: 1; }
 }
+@keyframes shimmer {
+  from { background-position: -200px 0; }
+  to { background-position: 200px 0; }
+}
+.skeleton {
+  background: #1c1c1c linear-gradient(90deg, #1c1c1c 0%, #262626 50%, #1c1c1c 100%) no-repeat;
+  background-size: 200px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
 @keyframes progress {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, Database, Info, Smartphone, Users, ChevronRight } from 'lucide-react';
+import { Camera, Database, Images, Info, Smartphone, Users, ChevronRight } from 'lucide-react';
 import { useStore } from '../store';
 import { storageEstimate } from '../db';
 import { exportScreen } from '../export';
@@ -51,6 +51,7 @@ export function SimMenu() {
         {row(<Camera size={18} />, 'Screenshot exportieren', 'Aktuelle Ansicht als PNG', () => exportScreen('chatliste'), 'menu-export')}
         {row(<Smartphone size={18} />, 'Statusleiste & Profil', 'Uhrzeit, Akku, Badges, Antworten', () => setSheet('statusbar'))}
         {row(<Database size={18} />, 'Backup & Speicher', 'JSON exportieren/importieren, zurücksetzen', () => setSheet('backup'), 'menu-backup')}
+        {row(<Images size={18} />, 'Storys verwalten', 'Bilder für Storys & Entdecken, Story simulieren', () => setSheet('storyadmin'))}
         {row(<Info size={18} />, 'Info & Installation', 'Zum Home-Bildschirm hinzufügen', () => setSheet('about'))}
       </div>
       <p className="mt-4 text-center text-[11px] text-[#777]">

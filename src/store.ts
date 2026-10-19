@@ -4,7 +4,7 @@ import { CANNED_REPLIES, DEFAULT_SETTINGS, defaultContacts, defaultIndexOf, defa
 import { clearAll, loadAll, remove, requestPersistence, save } from './db';
 import { dayKey, uid } from './utils';
 
-export type Sheet = null | 'menu' | 'contacts' | 'statusbar' | 'backup' | 'about' | 'placeholder';
+export type Sheet = null | 'menu' | 'contacts' | 'statusbar' | 'backup' | 'about' | 'placeholder' | 'storyadmin';
 
 interface State {
   ready: boolean;
@@ -64,6 +64,7 @@ interface State {
 
   addSpotlight: (image: string, caption: string) => void;
   toggleLike: (id: string) => void;
+  removeSpotlight: (id: string) => void;
 
   exportBackup: () => Backup;
   importBackup: (b: Backup) => Promise<void>;
@@ -324,6 +325,7 @@ export const useStore = create<State>((set, get) => {
           ...s.spotlight,
         ],
       })),
+    removeSpotlight: (id) => set((s) => ({ spotlight: s.spotlight.filter((x) => x.id !== id) })),
     toggleLike: (id) =>
       set((s) => ({
         spotlight: s.spotlight.map((x) => (x.id === id ? { ...x, liked: !x.liked, likes: x.likes + (x.liked ? -1 : 1) } : x)),

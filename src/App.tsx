@@ -6,7 +6,7 @@ import BottomNav from './components/BottomNav';
 import ChatView from './components/ChatView';
 import CameraScreen from './components/Camera';
 import { SnapViewer, StoryViewer } from './components/Viewers';
-import StoriesScreen from './components/Stories';
+import StoriesScreen, { StoryAdminSheet } from './components/Stories';
 import SpotlightScreen from './components/Spotlight';
 import MapScreen from './components/MapScreen';
 import { SimMenu, PlaceholderSheet, StatusBarSheet, BackupSheet, AboutSheet } from './components/Sheets';
@@ -63,6 +63,8 @@ export default function App() {
         {sheet === 'statusbar' && <StatusBarSheet />}
         {sheet === 'backup' && <BackupSheet />}
         {sheet === 'about' && <AboutSheet />}
+      {sheet === 'storyadmin' && <StoryAdminSheet />}
+        {sheet === 'storyadmin' && <StoryAdminSheet />}
         {sheet === 'placeholder' && <PlaceholderSheet />}
         {exporting && settings.exportWatermark && (
           <div className="pointer-events-none absolute bottom-[3px] right-[8px] z-[100] text-[9px] font-medium tracking-wide text-white/30">Simulation · SnapSim</div>

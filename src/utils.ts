@@ -110,6 +110,23 @@ export function loadImage(url: string) {
   });
 }
 
+/** Like pickFile, but lets the user choose several images at once. */
+export function pickFiles(accept = 'image/*'): Promise<File[]> {
+  return new Promise((resolve) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = accept;
+    input.multiple = true;
+    input.style.display = 'none';
+    input.onchange = () => {
+      resolve(Array.from(input.files ?? []));
+      input.remove();
+    };
+    document.body.appendChild(input);
+    input.click();
+  });
+}
+
 export function pickFile(accept = 'image/*', capture?: 'user' | 'environment'): Promise<File | null> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
